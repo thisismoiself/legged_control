@@ -14,10 +14,18 @@
     <xacro:property name="hip_length" value="0.04"/>
     <xacro:property name="thigh_shoulder_radius" value="0.041"/>
     <xacro:property name="thigh_shoulder_length" value="0.032"/>
+
+    <!-- ADDED -->
+    <xacro:property name="thigh_shoulder_y_offset" value="-0.008"/>
+
     <xacro:property name="thigh_width" value="0.0245"/>
     <xacro:property name="thigh_height" value="0.034"/>
+    <!-- ADDED -->
+    <xacro:property name="thigh_x_offset" value="0"/>
     <xacro:property name="calf_width" value="0.016"/>
     <xacro:property name="calf_height" value="0.016"/>
+    <!-- ADDED -->
+    <xacro:property name="calf_x_offset" value="0.0"/>
     <xacro:property name="foot_radius" value="0.02"/>
     <xacro:property name="stick_radius" value="0.01"/>
     <xacro:property name="stick_length" value="0.2"/>

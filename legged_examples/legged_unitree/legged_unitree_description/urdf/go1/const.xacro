@@ -5,6 +5,7 @@
     <!-- Constants for robot dimensions -->
     <xacro:property name="PI" value="3.1415926535897931"/>
 
+
     <!-- simplified collision value -->
     <xacro:property name="trunk_width" value="0.0935"/>
     <xacro:property name="trunk_length" value="0.3762"/>
