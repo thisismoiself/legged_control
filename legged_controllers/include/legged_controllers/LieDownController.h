@@ -8,15 +8,6 @@
 #include <hardware_interface/imu_sensor_interface.h>
 #include <legged_common/hardware_interface/ContactSensorInterface.h>
 
-#include <ocs2_centroidal_model/CentroidalModelRbdConversions.h>
-#include <ocs2_core/misc/Benchmark.h>
-#include <ocs2_legged_robot_ros/visualization/LeggedRobotVisualizer.h>
-#include <ocs2_mpc/MPC_MRT_Interface.h>
-
-#include <legged_estimation/StateEstimateBase.h>
-#include <legged_interface/LeggedInterface.h>
-#include <legged_wbc/WbcBase.h>
-
 #include "legged_controllers/SafetyChecker.h"
 #include "legged_controllers/visualization/LeggedSelfCollisionVisualization.h"
 
@@ -37,10 +28,7 @@ class LieDownController : public controller_interface::MultiInterfaceController<
  protected:
 
   // Interface
-  std::shared_ptr<PinocchioEndEffectorKinematics> eeKinematicsPtr_;
   std::vector<HybridJointHandle> hybridJointHandles_;
-  std::vector<ContactSensorHandle> contactHandles_;
-  hardware_interface::ImuSensorHandle imuSensorHandle_;
 
  private:
   std::atomic_bool controllerRunning_{};
