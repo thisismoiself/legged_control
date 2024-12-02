@@ -27,93 +27,59 @@ bool LieDownController::init(hardware_interface::RobotHW* robot_hw, ros::NodeHan
 
 void LieDownController::starting(const ros::Time& time) {
 
-  ROS_INFO_STREAM("Starting LieDownController ...");
+    ROS_INFO_STREAM("Starting LieDownController ...");
+    reset();
 
+}
+
+void LieDownController::reset() {
+    ROS_INFO("Resetting LieDownController ...");
+    Kp = 60.0;
+    Kd = 5.0;
+    motiontime = 0;
+    dt = 0.002; // 0.001~0.01
+    
+    _startPos[12];
+    _duration_1 = 500;   
+    _duration_2 = 500; 
+    _percent_1 = 0;    
+    _percent_2 = 0;    
+
+    bool firstRun = true;
 }
 
 void LieDownController::update(const ros::Time& time, const ros::Duration& period) {
 
-    if(_percent_4<1)
-    {
-        // std::cout<<"The example is running! "<<std::endl;
-    }
-    if((_percent_4 == 1) && ( done == false))
-    {
-        std::cout<<"The example is done! "<<std::endl;
-        std::cout<<std::endl;
-        done = true;
-    }
-
     motiontime++;
-    if(motiontime>=500)
+
+    if(firstRun)
     {
-        if(firstRun)
+        for(int i = 0; i < 12; i++)
         {
-            for(int i = 0; i < 12; i++)
-            {
-                _startPos[i] = hybridJointHandles_[i].getPosition(); // Read initial joint positions
-            }
-            firstRun = false;
+            _startPos[i] = hybridJointHandles_[i].getPosition(); // Read initial joint positions
         }
+        firstRun = false;
+    }
 
-        _percent_1 += (float)1 / _duration_1;
-        _percent_1 = _percent_1 > 1 ? 1 : _percent_1;
-        if (_percent_1 < 1)
+    _percent_1 += (float)1 / _duration_1;
+    _percent_1 = _percent_1 > 1 ? 1 : _percent_1;
+    if (_percent_1 < 1) // moving down
+    {
+        for (int j = 0; j < 12; j++)
         {
-            // ROS_INFO("----------------------Phase 1------------------------");
-            for (int j = 0; j < 12; j++)
-            {
-                auto posDes = (1 - _percent_1) * _startPos[j] + _percent_1 * _targetPos_1[j];
-                hybridJointHandles_[j].setCommand(posDes, 0, Kp, Kd, 0);
-                // ROS_INFO_STREAM("Joint " <<  j << " : " << posDes);
-            }
-        
+            auto posDes = (1 - _percent_1) * _startPos[j] + _percent_1 * _targetPos_1[j];
+            hybridJointHandles_[j].setCommand(posDes, 0, Kp, Kd, 0);
         }
-        if ((_percent_1 == 1)&&(_percent_2 < 1))
+    }
+    if ((_percent_1 == 1)&&(_percent_2 <= 1)) // lying down
+    {
+        _percent_2 += (float)1 / _duration_2;
+        _percent_2 = _percent_2 > 1 ? 1 : _percent_2;
+
+        for (int j = 0; j < 12; j++)
         {
-            _percent_2 += (float)1 / _duration_2;
-            _percent_2 = _percent_2 > 1 ? 1 : _percent_2;
-
-            // ROS_INFO("----------------------Phase 2------------------------");
-            for (int j = 0; j < 12; j++)
-            {
-                auto posDes = (1 - _percent_2) * _targetPos_1[j] + _percent_2 * _targetPos_2[j];
-                hybridJointHandles_[j].setCommand(posDes, 0, Kp, Kd, 0);
-                // ROS_INFO_STREAM("Joint " <<  j << " : " << posDes);
-            }
-        }
-
-        if ((_percent_1 == 1)&&(_percent_2 == 1)&&(_percent_3<1))
-        {
-            _percent_3 += (float)1 / _duration_3;
-            _percent_3 = _percent_3 > 1 ? 1 : _percent_3;
-
-            // ROS_INFO("----------------------Phase 3------------------------");
-
-            for (int j = 0; j < 12; j++)
-            {
-                auto posDes = _targetPos_2[j];
-                hybridJointHandles_[j].setCommand(posDes, 0, Kp, Kd, 0);
-                // ROS_INFO_STREAM("Joint " <<  j << " : " << posDes);
-            }
-        }
-        if ((_percent_1 == 1)&&(_percent_2 == 1)&&(_percent_3==1)&&((_percent_4<=1)))
-        {
-            _percent_4 += (float)1 / _duration_4;
-            _percent_4 = _percent_4 > 1 ? 1 : _percent_4;
-         
-            ROS_INFO("----------------------------------------------");
-            for (int j = 0; j < 12; j++)
-            {
-                auto posDes = (1 - _percent_4) * _targetPos_2[j] + _percent_4 * _targetPos_3[j];
-                hybridJointHandles_[j].setCommand(posDes, 0, Kp, Kd, 0);
-                auto pos = hybridJointHandles_[j].getPosition();
-                if(posDes - pos > 0.05)
-                {
-                    ROS_INFO_STREAM("Joint " <<  j << " : Error: " << posDes - pos << " Des: " << posDes << " Act: " << pos);
-                }
-                // ROS_INFO_STREAM("Joint " <<  j << " : Error: " << posDes - pos << " Des: " << posDes << " Act: " << pos);
-            }
+            auto posDes = _targetPos_1[j];
+            hybridJointHandles_[j].setCommand(posDes, 0, Kp, Kd, 0);
         }
     }
 }

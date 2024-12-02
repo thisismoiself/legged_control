@@ -8,6 +8,15 @@
 #include <hardware_interface/imu_sensor_interface.h>
 #include <legged_common/hardware_interface/ContactSensorInterface.h>
 
+#include <ocs2_centroidal_model/CentroidalModelRbdConversions.h>
+#include <ocs2_core/misc/Benchmark.h>
+#include <ocs2_legged_robot_ros/visualization/LeggedRobotVisualizer.h>
+#include <ocs2_mpc/MPC_MRT_Interface.h>
+
+#include <legged_estimation/StateEstimateBase.h>
+#include <legged_interface/LeggedInterface.h>
+#include <legged_wbc/WbcBase.h>
+
 #include "legged_controllers/SafetyChecker.h"
 #include "legged_controllers/visualization/LeggedSelfCollisionVisualization.h"
 
@@ -24,6 +33,7 @@ class LieDownController : public controller_interface::MultiInterfaceController<
   void update(const ros::Time& time, const ros::Duration& period) override;
   void starting(const ros::Time& time) override;
   void stopping(const ros::Time& /*time*/) override { }
+  void reset();
 
  protected:
 
@@ -35,24 +45,12 @@ class LieDownController : public controller_interface::MultiInterfaceController<
 
     float Kp = 60.0;
     float Kd = 5.0;
-    double time_consume = 0;
-    int rate_count = 0;
-    int sin_count = 0;
     int motiontime = 0;
     float dt = 0.002; // 0.001~0.01
     
 
-    float _targetPos_1[12] = {0.0, 1.36, -2.65, 0.0, 1.36, -2.65,
-                              -0.2, 1.36, -2.65, 0.2, 1.36, -2.65};
-
-    float _targetPos_2[12] = {0.0, 0.67, -1.3, 0.0, 0.67, -1.3,
-                              0.0, 0.67, -1.3, 0.0, 0.67, -1.3};
-
-    // float _targetPos_3[12] = {-0.35, 1.36, -2.65, 0.35, 1.36, -2.65,
-    //                           -0.5, 1.36, -2.65, 0.5, 1.36, -2.65};
-
     //LF LH RF RH
-    float _targetPos_3[12] = {0.0, 1.26, -2.70, 0.33, 1.26, -2.70,
+    float _targetPos_1[12] = {0.0, 1.26, -2.70, 0.33, 1.26, -2.70,
                               0.0, 1.26, -2.70, -0.33, 1.26, -2.70};
 
     float _startPos[12];

@@ -28,75 +28,85 @@ bool StandUpController::init(hardware_interface::RobotHW* robot_hw, ros::NodeHan
 void StandUpController::starting(const ros::Time& time) {
 
   ROS_INFO_STREAM("Starting StandUpController ...");
+  reset();
 
+}
+
+void StandUpController::reset() {
+    ROS_INFO("Resetting StandUpController ...");
+    Kp = 60.0;
+    Kd = 5.0;
+    motiontime = 0;
+    dt = 0.002; // 0.001~0.01
+    
+    _startPos[12];
+    _duration_1 = 500;   
+    _duration_2 = 500; 
+    _duration_3 = 1000;   
+    _percent_1 = 0;    
+    _percent_2 = 0;    
+    _percent_3 = 0;    
+
+    bool firstRun = true;
+    bool done = false;
+}
+
+void StandUpController::changeMode(int mode) {
+    if (mode == 0)
+    {
+        _percent_1 = 0;
+        _percent_2 = 0;
+        _percent_3 = 0;
+        firstRun = true;
+        done = false;
+    }
 }
 
 void StandUpController::update(const ros::Time& time, const ros::Duration& period) {
 
-    if((_percent_4 == 1) && ( done == false))
+    motiontime++;
+
+    if(firstRun)
     {
-        ROS_INFO("Motion complete!");
-        done = true;
+        for(int i = 0; i < 12; i++)
+        {
+            _startPos[i] = hybridJointHandles_[i].getPosition(); // Read initial joint positions
+        }
+        firstRun = false;
     }
 
-    motiontime++;
-    if(motiontime>=500)
+    _percent_1 += (float)1 / _duration_1;
+    _percent_1 = _percent_1 > 1 ? 1 : _percent_1;
+    if (_percent_1 < 1) // Stand up phase 1 
     {
-        if(firstRun)
+        for (int j = 0; j < 12; j++)
         {
-            for(int i = 0; i < 12; i++)
-            {
-                _startPos[i] = hybridJointHandles_[i].getPosition(); // Read initial joint positions
-            }
-            firstRun = false;
+            auto posDes = (1 - _percent_1) * _startPos[j] + _percent_1 * _targetPos_1[j];
+            hybridJointHandles_[j].setCommand(posDes, 0, Kp, Kd, 0);
         }
+    
+    }
+    if ((_percent_1 == 1)&&(_percent_2 < 1)) // stand up phase 2
+    {
+        _percent_2 += (float)1 / _duration_2;
+        _percent_2 = _percent_2 > 1 ? 1 : _percent_2;
 
-        _percent_1 += (float)1 / _duration_1;
-        _percent_1 = _percent_1 > 1 ? 1 : _percent_1;
-        if (_percent_1 < 1)
+        for (int j = 0; j < 12; j++)
         {
-            for (int j = 0; j < 12; j++)
-            {
-                auto posDes = (1 - _percent_1) * _startPos[j] + _percent_1 * _targetPos_1[j];
-                hybridJointHandles_[j].setCommand(posDes, 0, Kp, Kd, 0);
-            }
-        
+            auto posDes = (1 - _percent_2) * _targetPos_1[j] + _percent_2 * _targetPos_2[j];
+            hybridJointHandles_[j].setCommand(posDes, 0, Kp, Kd, 0);
         }
-        if ((_percent_1 == 1)&&(_percent_2 < 1))
+    }
+
+    if ((_percent_1 == 1)&&(_percent_2 == 1)&&(_percent_3<=1)) // standing phase
+    {
+        _percent_3 += (float)1 / _duration_3;
+        _percent_3 = _percent_3 > 1 ? 1 : _percent_3;
+
+        for (int j = 0; j < 12; j++)
         {
-            _percent_2 += (float)1 / _duration_2;
-            _percent_2 = _percent_2 > 1 ? 1 : _percent_2;
-
-            for (int j = 0; j < 12; j++)
-            {
-                auto posDes = (1 - _percent_2) * _targetPos_1[j] + _percent_2 * _targetPos_2[j];
-                hybridJointHandles_[j].setCommand(posDes, 0, Kp, Kd, 0);
-            }
-        }
-
-        if ((_percent_1 == 1)&&(_percent_2 == 1)&&(_percent_3<1))
-        {
-            _percent_3 += (float)1 / _duration_3;
-            _percent_3 = _percent_3 > 1 ? 1 : _percent_3;
-
-
-            for (int j = 0; j < 12; j++)
-            {
-                auto posDes = _targetPos_2[j];
-                hybridJointHandles_[j].setCommand(posDes, 0, Kp, Kd, 0);
-            }
-        }
-        if ((_percent_1 == 1)&&(_percent_2 == 1)&&(_percent_3==1)&&((_percent_4<=1)))
-        {
-            _percent_4 += (float)1 / _duration_4;
-            _percent_4 = _percent_4 > 1 ? 1 : _percent_4;
-         
-            for (int j = 0; j < 12; j++)
-            {
-                auto posDes = (1 - _percent_4) * _targetPos_2[j] + _percent_4 * _targetPos_3[j];
-                hybridJointHandles_[j].setCommand(posDes, 0, Kp, Kd, 0);
-                auto pos = hybridJointHandles_[j].getPosition();
-            }
+            auto posDes = _targetPos_2[j];
+            hybridJointHandles_[j].setCommand(posDes, 0, Kp, Kd, 0);
         }
     }
 }
