@@ -8,4 +8,5 @@ controllers:
     type: legged/LeggedCheaterController
   stand_up_controller:
     type: legged/StandUpController
-  
+  lie_down_controller:
+    type: legged/LieDownController

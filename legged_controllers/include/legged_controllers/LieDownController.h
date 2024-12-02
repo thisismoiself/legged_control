@@ -24,11 +24,11 @@ namespace legged {
 using namespace ocs2;
 using namespace legged_robot;
 
-class StandUpController : public controller_interface::MultiInterfaceController<HybridJointInterface, hardware_interface::ImuSensorInterface,
+class LieDownController : public controller_interface::MultiInterfaceController<HybridJointInterface, hardware_interface::ImuSensorInterface,
                                                                                ContactSensorInterface> {
  public:
-  StandUpController() = default;
-  ~StandUpController() override;
+  LieDownController() = default;
+  ~LieDownController() override;
   bool init(hardware_interface::RobotHW* robot_hw, ros::NodeHandle& controller_nh) override;
   void update(const ros::Time& time, const ros::Duration& period) override;
   void starting(const ros::Time& time) override;

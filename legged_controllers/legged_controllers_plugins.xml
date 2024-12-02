@@ -13,4 +13,18 @@
             The basic legged controller with cheat state estimator
         </description>
     </class>
+
+    <class name="legged/StandUpController" type="legged::StandUpController"
+            base_class_type="controller_interface::ControllerBase">
+        <description>
+            Controller for making the Go2 stand up
+        </description>
+    </class>
+
+    <class name="legged/LieDownController" type="legged::LieDownController"
+            base_class_type="controller_interface::ControllerBase">
+        <description>
+            Controller for making the Go2 lay down
+        </description>
+    </class>
 </library>
