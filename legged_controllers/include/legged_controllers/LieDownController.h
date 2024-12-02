@@ -5,27 +5,10 @@
 #pragma once
 
 #include <controller_interface/multi_interface_controller.h>
-#include <hardware_interface/imu_sensor_interface.h>
-#include <legged_common/hardware_interface/ContactSensorInterface.h>
-
-#include <ocs2_centroidal_model/CentroidalModelRbdConversions.h>
-#include <ocs2_core/misc/Benchmark.h>
-#include <ocs2_legged_robot_ros/visualization/LeggedRobotVisualizer.h>
-#include <ocs2_mpc/MPC_MRT_Interface.h>
-
-#include <legged_estimation/StateEstimateBase.h>
-#include <legged_interface/LeggedInterface.h>
-#include <legged_wbc/WbcBase.h>
-
-#include "legged_controllers/SafetyChecker.h"
-#include "legged_controllers/visualization/LeggedSelfCollisionVisualization.h"
-
+#include <legged_common/hardware_interface/HybridJointInterface.h>
 namespace legged {
-using namespace ocs2;
-using namespace legged_robot;
 
-class LieDownController : public controller_interface::MultiInterfaceController<HybridJointInterface, hardware_interface::ImuSensorInterface,
-                                                                               ContactSensorInterface> {
+class LieDownController : public controller_interface::MultiInterfaceController<HybridJointInterface> {
  public:
   LieDownController() = default;
   ~LieDownController() override;
@@ -56,12 +39,8 @@ class LieDownController : public controller_interface::MultiInterfaceController<
     float _startPos[12];
     float _duration_1 = 500;   
     float _duration_2 = 500; 
-    float _duration_3 = 1000;   
-    float _duration_4 = 900;   
     float _percent_1 = 0;    
     float _percent_2 = 0;    
-    float _percent_3 = 0;    
-    float _percent_4 = 0;    
 
     bool firstRun = true;
     bool done = false;

@@ -7,27 +7,12 @@
 #include "ros/ros.h"
 
 #include <controller_interface/multi_interface_controller.h>
-#include <hardware_interface/imu_sensor_interface.h>
-#include <legged_common/hardware_interface/ContactSensorInterface.h>
+#include <legged_common/hardware_interface/HybridJointInterface.h>
 
-#include <ocs2_centroidal_model/CentroidalModelRbdConversions.h>
-#include <ocs2_core/misc/Benchmark.h>
-#include <ocs2_legged_robot_ros/visualization/LeggedRobotVisualizer.h>
-#include <ocs2_mpc/MPC_MRT_Interface.h>
-
-#include <legged_estimation/StateEstimateBase.h>
-#include <legged_interface/LeggedInterface.h>
-#include <legged_wbc/WbcBase.h>
-
-#include "legged_controllers/SafetyChecker.h"
-#include "legged_controllers/visualization/LeggedSelfCollisionVisualization.h"
 
 namespace legged {
-using namespace ocs2;
-using namespace legged_robot;
 
-class StandUpController : public controller_interface::MultiInterfaceController<HybridJointInterface, hardware_interface::ImuSensorInterface,
-                                                                               ContactSensorInterface> {
+class StandUpController : public controller_interface::MultiInterfaceController<HybridJointInterface> {
  public:
   StandUpController() = default;
   ~StandUpController() override;
@@ -41,10 +26,7 @@ class StandUpController : public controller_interface::MultiInterfaceController<
  protected:
 
   // Interface
-  std::shared_ptr<PinocchioEndEffectorKinematics> eeKinematicsPtr_;
   std::vector<HybridJointHandle> hybridJointHandles_;
-  std::vector<ContactSensorHandle> contactHandles_;
-  hardware_interface::ImuSensorHandle imuSensorHandle_;
 
   // Advertise mode service
 
@@ -70,7 +52,6 @@ class StandUpController : public controller_interface::MultiInterfaceController<
     float _duration_1 = 500;   
     float _duration_2 = 500; 
     float _duration_3 = 1000;   
-    float _duration_4 = 900;   
     float _percent_1 = 0;    
     float _percent_2 = 0;    
     float _percent_3 = 0;    
