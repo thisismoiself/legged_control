@@ -15,7 +15,7 @@ class LieDownController : public controller_interface::MultiInterfaceController<
   bool init(hardware_interface::RobotHW* robot_hw, ros::NodeHandle& controller_nh) override;
   void update(const ros::Time& time, const ros::Duration& period) override;
   void starting(const ros::Time& time) override;
-  void stopping(const ros::Time& /*time*/) override { }
+  void stopping(const ros::Time& /*time*/) override;
   void reset();
 
  protected:
@@ -39,8 +39,10 @@ class LieDownController : public controller_interface::MultiInterfaceController<
     float _startPos[12];
     float _duration_1 = 500;   
     float _duration_2 = 500; 
+    float _duration_3 = 500; 
     float _percent_1 = 0;    
     float _percent_2 = 0;    
+    float _percent_3 = 0;    
 
     bool firstRun = true;
     bool done = false;

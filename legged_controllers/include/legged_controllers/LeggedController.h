@@ -32,7 +32,7 @@ class LeggedController : public controller_interface::MultiInterfaceController<H
   bool init(hardware_interface::RobotHW* robot_hw, ros::NodeHandle& controller_nh) override;
   void update(const ros::Time& time, const ros::Duration& period) override;
   void starting(const ros::Time& time) override;
-  void stopping(const ros::Time& /*time*/) override { mpcRunning_ = false; }
+  void stopping(const ros::Time& /*time*/) override;
 
  protected:
   virtual void updateStateEstimation(const ros::Time& time, const ros::Duration& period);

@@ -19,7 +19,7 @@ class StandUpController : public controller_interface::MultiInterfaceController<
   bool init(hardware_interface::RobotHW* robot_hw, ros::NodeHandle& controller_nh) override;
   void update(const ros::Time& time, const ros::Duration& period) override;
   void starting(const ros::Time& time) override;
-  void stopping(const ros::Time& /*time*/) override { }
+  void stopping(const ros::Time& /*time*/) override;
   void reset();
   void changeMode(int mode);
 

@@ -32,6 +32,15 @@ void LieDownController::starting(const ros::Time& time) {
 
 }
 
+void LieDownController::stopping(const ros::Time& time) {
+
+    ROS_INFO_STREAM("Stopping LieDownController, setting motors to damping");
+    for(int j = 0; j < 12; j++)
+    {
+            hybridJointHandles_[j].setCommand(0, 0, 0, 2.0, 0);
+    }
+}
+
 void LieDownController::reset() {
     ROS_INFO("Resetting LieDownController ...");
     Kp = 60.0;
@@ -44,6 +53,7 @@ void LieDownController::reset() {
     _duration_2 = 500; 
     _percent_1 = 0;    
     _percent_2 = 0;    
+    _percent_3 = 0;    
 
     bool firstRun = true;
 }
@@ -71,7 +81,7 @@ void LieDownController::update(const ros::Time& time, const ros::Duration& perio
             hybridJointHandles_[j].setCommand(posDes, 0, Kp, Kd, 0);
         }
     }
-    if ((_percent_1 == 1)&&(_percent_2 <= 1)) // lying down
+    if ((_percent_1 == 1)&&(_percent_2 < 1)) // lying down
     {
         _percent_2 += (float)1 / _duration_2;
         _percent_2 = _percent_2 > 1 ? 1 : _percent_2;
@@ -80,6 +90,17 @@ void LieDownController::update(const ros::Time& time, const ros::Duration& perio
         {
             auto posDes = _targetPos_1[j];
             hybridJointHandles_[j].setCommand(posDes, 0, Kp, Kd, 0);
+        }
+    }
+    if ((_percent_1 == 1)&&(_percent_2 == 1)&&(_percent_3 <= 1)) // damping
+    {
+        _percent_3 += (float)1 / _duration_3;
+        _percent_3 = _percent_3 > 1 ? 1 : _percent_3;
+
+        for (int j = 0; j < 12; j++)
+        {
+            auto posDes = _targetPos_1[j];
+            hybridJointHandles_[j].setCommand(0, 0, 0, 2.0, 0);
         }
     }
 }

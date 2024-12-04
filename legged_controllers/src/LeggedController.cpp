@@ -98,6 +98,16 @@ void LeggedController::starting(const ros::Time& time) {
   mpcRunning_ = true;
 }
 
+void LeggedController::stopping(const ros::Time& time) {
+
+  mpcRunning_ = false; 
+  ROS_INFO_STREAM("Stopping LeggedController, setting motors to damping");
+  for(int j = 0; j < 12; j++)
+  {
+          hybridJointHandles_[j].setCommand(0, 0, 0, 2.0, 0);
+  }
+}
+
 void LeggedController::update(const ros::Time& time, const ros::Duration& period) {
   // State Estimate
   updateStateEstimation(time, period);

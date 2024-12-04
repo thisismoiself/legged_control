@@ -32,6 +32,15 @@ void StandUpController::starting(const ros::Time& time) {
 
 }
 
+void StandUpController::stopping(const ros::Time& time) {
+
+    ROS_INFO_STREAM("Stopping StandUpController, setting motors to damping");
+    for(int j = 0; j < 12; j++)
+    {
+            hybridJointHandles_[j].setCommand(0, 0, 0, 2.0, 0);
+    }
+}
+
 void StandUpController::reset() {
     ROS_INFO("Resetting StandUpController ...");
     Kp = 60.0;
