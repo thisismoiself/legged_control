@@ -95,8 +95,8 @@ class UnitreeHW : public LeggedHW {
   /*subscriber*/
   ChannelSubscriberPtr<unitree_go::msg::dds_::LowState_> lowstate_subscriber;
 
-  // const char* NETWORK_INTERFACE = "enp59s0";
-  const char* NETWORK_INTERFACE = "enp7s0";
+  const char* NETWORK_INTERFACE = "enp59s0";
+  // const char* NETWORK_INTERFACE = "enp7s0";
 
 
 
