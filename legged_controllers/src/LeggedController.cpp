@@ -77,6 +77,9 @@ bool LeggedController::init(hardware_interface::RobotHW* robot_hw, ros::NodeHand
 }
 
 void LeggedController::starting(const ros::Time& time) {
+
+  ROS_INFO_STREAM("Starting LeggedController ...");
+
   // Initial state
   currentObservation_.state.setZero(leggedInterface_->getCentroidalModelInfo().stateDim);
   updateStateEstimation(time, ros::Duration(0.002));
