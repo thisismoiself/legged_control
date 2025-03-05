@@ -46,51 +46,62 @@ KalmanFilterEstimate::KalmanFilterEstimate(PinocchioInterface pinocchioInterface
 
   world2odom_.setRotation(tf2::Quaternion::getIdentity());
   sub_ = ros::NodeHandle().subscribe<nav_msgs::Odometry>("/tracking_camera/odom/sample", 10, &KalmanFilterEstimate::callback, this);
+  // sub_ = ros::NodeHandle().subscribe<nav_msgs::Odometry>("/tracking_camera/odom/sample", 10, &KalmanFilterEstimate::callback, this);
 }
 
 vector_t KalmanFilterEstimate::update(const ros::Time& time, const ros::Duration& period) {
-  scalar_t dt = period.toSec();
-  a_.block(0, 3, 3, 3) = dt * matrix3_t::Identity();
-  b_.block(0, 0, 3, 3) = 0.5 * dt * dt * matrix3_t::Identity();
-  b_.block(3, 0, 3, 3) = dt * matrix3_t::Identity();
-  q_.block(0, 0, 3, 3) = (dt / 20.f) * matrix3_t::Identity();
-  q_.block(3, 3, 3, 3) = (dt * 9.81f / 20.f) * matrix3_t::Identity();
-  q_.block(6, 6, dimContacts_, dimContacts_) = dt * matrix_t::Identity(dimContacts_, dimContacts_);
+  scalar_t dt = period.toSec(); // Calculate timestep
 
-  const auto& model = pinocchioInterface_.getModel();
-  auto& data = pinocchioInterface_.getData();
-  size_t actuatedDofNum = info_.actuatedDofNum;
+  a_.block(0, 3, 3, 3) = dt * matrix3_t::Identity();                                                // update state transition matrix
+  b_.block(0, 0, 3, 3) = 0.5 * dt * dt * matrix3_t::Identity();                                     // update input matrix
+  b_.block(3, 0, 3, 3) = dt * matrix3_t::Identity();                                                // update input matrix
+  q_.block(0, 0, 3, 3) = (dt / 20.f) * matrix3_t::Identity();                                       // update process noise matrix
+  q_.block(3, 3, 3, 3) = (dt * 9.81f / 20.f) * matrix3_t::Identity();                               // update process noise matrix
+  q_.block(6, 6, dimContacts_, dimContacts_) = dt * matrix_t::Identity(dimContacts_, dimContacts_); // update process noise matrix
 
+  const auto& model = pinocchioInterface_.getModel();                                               // Get pinocchio model
+  auto& data = pinocchioInterface_.getData();                                                       // Get pinocchip data
+  size_t actuatedDofNum = info_.actuatedDofNum;                                                     // Get number of actuated DoF
+
+  // Initialize position and velocity vector for joints
   vector_t qPino(info_.generalizedCoordinatesNum);
   vector_t vPino(info_.generalizedCoordinatesNum);
+
+  // Get position (orientation) of joints
   qPino.setZero();
   qPino.segment<3>(3) = rbdState_.head<3>();  // Only set orientation, let position in origin.
   qPino.tail(actuatedDofNum) = rbdState_.segment(6, actuatedDofNum);
 
+  // Get (angular) velocity of joints
   vPino.setZero();
   vPino.segment<3>(3) = getEulerAnglesZyxDerivativesFromGlobalAngularVelocity<scalar_t>(
       qPino.segment<3>(3),
       rbdState_.segment<3>(info_.generalizedCoordinatesNum));  // Only set angular velocity, let linear velocity be zero
   vPino.tail(actuatedDofNum) = rbdState_.segment(6 + info_.generalizedCoordinatesNum, actuatedDofNum);
 
+  // Run a forward pass of the kinematics and update the coordinate frames and velocity
   pinocchio::forwardKinematics(model, data, qPino, vPino);
   pinocchio::updateFramePlacements(model, data);
-
+  
+  // Get end effector position and velocity
   const auto eePos = eeKinematics_->getPosition(vector_t());
   const auto eeVel = eeKinematics_->getVelocity(vector_t(), vector_t());
 
+  // Update process noise matrix
   matrix_t q = matrix_t::Identity(numState_, numState_);
-  q.block(0, 0, 3, 3) = q_.block(0, 0, 3, 3) * imuProcessNoisePosition_;
-  q.block(3, 3, 3, 3) = q_.block(3, 3, 3, 3) * imuProcessNoiseVelocity_;
-  q.block(6, 6, dimContacts_, dimContacts_) = q_.block(6, 6, dimContacts_, dimContacts_) * footProcessNoisePosition_;
+  q.block(0, 0, 3, 3) = q_.block(0, 0, 3, 3) * imuProcessNoisePosition_;                                                // update process noise of imu position
+  q.block(3, 3, 3, 3) = q_.block(3, 3, 3, 3) * imuProcessNoiseVelocity_;                                                // update process noise of imu velocity
+  q.block(6, 6, dimContacts_, dimContacts_) = q_.block(6, 6, dimContacts_, dimContacts_) * footProcessNoisePosition_;   // update process noise of foot position
 
+  // Update sensor noise matrix
   matrix_t r = matrix_t::Identity(numObserve_, numObserve_);
   r.block(0, 0, dimContacts_, dimContacts_) = r_.block(0, 0, dimContacts_, dimContacts_) * footSensorNoisePosition_;
   r.block(dimContacts_, dimContacts_, dimContacts_, dimContacts_) =
       r_.block(dimContacts_, dimContacts_, dimContacts_, dimContacts_) * footSensorNoiseVelocity_;
   r.block(2 * dimContacts_, 2 * dimContacts_, numContacts_, numContacts_) =
       r_.block(2 * dimContacts_, 2 * dimContacts_, numContacts_, numContacts_) * footHeightSensorNoise_;
-
+  
+  // Update process noise and sensor noise matrix for each contact
   for (int i = 0; i < numContacts_; i++) {
     int i1 = 3 * i;
 
@@ -100,38 +111,44 @@ vector_t KalmanFilterEstimate::update(const ros::Time& time, const ros::Duration
     int rIndex3 = 2 * dimContacts_ + i;
     bool isContact = contactFlag_[i];
 
+    // Feet in contact experience small noise, feet not in contact experience high noise
     scalar_t high_suspect_number(100);
     q.block(qIndex, qIndex, 3, 3) = (isContact ? 1. : high_suspect_number) * q.block(qIndex, qIndex, 3, 3);
     r.block(rIndex1, rIndex1, 3, 3) = (isContact ? 1. : high_suspect_number) * r.block(rIndex1, rIndex1, 3, 3);
     r.block(rIndex2, rIndex2, 3, 3) = (isContact ? 1. : high_suspect_number) * r.block(rIndex2, rIndex2, 3, 3);
     r(rIndex3, rIndex3) = (isContact ? 1. : high_suspect_number) * r(rIndex3, rIndex3);
 
+    // Get the position and velocity of the end effector (for the measurement vector y)
     ps_.segment(3 * i, 3) = -eePos[i];
     ps_.segment(3 * i, 3)[2] += footRadius_;
     vs_.segment(3 * i, 3) = -eeVel[i];
   }
 
+  // gravity vector
   vector3_t g(0, 0, -9.81);
+  
+  // get acceleration from IMU, add g to account for gravity
   vector3_t accel = getRotationMatrixFromZyxEulerAngles(quatToZyx(quat_)) * linearAccelLocal_ + g;
 
+  // ------------------- Kalman Filter Update -------------------
   vector_t y(numObserve_);
-  y << ps_, vs_, feetHeights_;
-  xHat_ = a_ * xHat_ + b_ * accel;
-  matrix_t at = a_.transpose();
-  matrix_t pm = a_ * p_ * at + q;
-  matrix_t cT = c_.transpose();
-  matrix_t yModel = c_ * xHat_;
-  matrix_t ey = y - yModel;
-  matrix_t s = c_ * pm * cT + r;
+  y << ps_, vs_, feetHeights_;      // Measurement vector
+  xHat_ = a_ * xHat_ + b_ * accel;  // Prediction vector (= state transition matrix * state estimate + input matrix * acceleration)
+  matrix_t at = a_.transpose();     // Transpose of state transition matrix
+  matrix_t pm = a_ * p_ * at + q;   // predicted error covariance matrix
+  matrix_t cT = c_.transpose();     // Transpose of measurement matrix
+  matrix_t yModel = c_ * xHat_;     // Model measurement vector
+  matrix_t ey = y - yModel;         // Measurement residual (difference between predicted and measured state)
+  matrix_t s = c_ * pm * cT + r;    // Innovation covariance
 
   vector_t sEy = s.lu().solve(ey);
   xHat_ += pm * cT * sEy;
 
-  matrix_t sC = s.lu().solve(c_);
-  p_ = (matrix_t::Identity(numState_, numState_) - pm * cT * sC) * pm;
+  matrix_t sC = s.lu().solve(c_);   // Kalman gain
+  p_ = (matrix_t::Identity(numState_, numState_) - pm * cT * sC) * pm;  // Update error covariance matrix
 
-  matrix_t pt = p_.transpose();
-  p_ = (p_ + pt) / 2.0;
+  matrix_t pt = p_.transpose();     // Transpose of error covariance matrix 
+  p_ = (p_ + pt) / 2.0;             // Symmetrize error covariance matrix
 
   //  if (p_.block(0, 0, 2, 2).determinant() > 0.000001) {
   //    p_.block(0, 2, 2, 16).setZero();
@@ -139,17 +156,20 @@ vector_t KalmanFilterEstimate::update(const ros::Time& time, const ros::Duration
   //    p_.block(0, 0, 2, 2) /= 10.;
   //  }
 
+  // Update state estimate from external measurement, e.g. tracking camera or lidar odometry
   if (topicUpdated_) {
     updateFromTopic();
     topicUpdated_ = false;
   }
 
+  // Linearly update position and velocity state estimate
   updateLinear(xHat_.segment<3>(0), xHat_.segment<3>(3));
 
   auto odom = getOdomMsg();
   odom.header.stamp = time;
   odom.header.frame_id = "odom";
   odom.child_frame_id = "base";
+  odom.pose.pose.position.z = odom.pose.pose.position.z + 1.0;
   publishMsgs(odom);
 
   return rbdState_;
