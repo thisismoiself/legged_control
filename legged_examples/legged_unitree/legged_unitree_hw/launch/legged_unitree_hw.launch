@@ -1,14 +1,15 @@
 <launch>
     <arg name="robot_type" default="$(env ROBOT_TYPE)" doc="Robot type: [a1, aliengo, go1, laikago, go2]"/>
 
-    <param name="legged_robot_description" command="$(find xacro)/xacro $(find go2_sensor_description)/xacro/robot.xacro
-       robot_type:=$(arg robot_type)
-    "/>
-    <node name="generate_urdf" pkg="legged_common" type="generate_urdf.sh" output="screen"
-          args="$(find go2_sensor_description)/xacro/robot.xacro $(arg robot_type)"/>
+    <param name="legged_robot_description" command="$(find xacro)/xacro $(find go2_sensor_description)/xacro/robot.xacro"/>
+    
+    <node name="generate_urdf" pkg="go2_sensor_description" type="generate_urdf.sh" output="screen"
+          args="$(find go2_sensor_description)/xacro/robot.xacro"/>
 
     <rosparam file="$(find legged_unitree_hw)/config/$(arg robot_type).yaml" command="load"/>
 
-    <param name="robot_type" value="$(arg robot_type)"/>
-    <include file="$(find legged_unitree_hw)/launch/$(arg robot_type).launch"/>
+    <!-- <param name="robot_type" value="$(arg robot_type)"/>
+    <include file="$(find legged_unitree_hw)/launch/$(arg robot_type).launch"/> -->
+
+    <node name="legged_unitree_hw" pkg="legged_unitree_hw" type="legged_unitree_hw_2" respawn="false" clear_params="true"/>
 </launch>
