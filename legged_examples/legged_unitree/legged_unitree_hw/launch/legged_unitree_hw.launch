@@ -4,7 +4,7 @@
     <param name="legged_robot_description" command="$(find xacro)/xacro $(find go2_sensor_description)/xacro/robot.xacro"/>
     
     <node name="generate_urdf" pkg="go2_sensor_description" type="generate_urdf.sh" output="screen"
-          args="$(find go2_sensor_description)/xacro/robot.xacro"/>
+          args="$(find go2_sensor_description)/urdf/robot.xacro"/>
 
     <rosparam file="$(find legged_unitree_hw)/config/$(arg robot_type).yaml" command="load"/>
 
