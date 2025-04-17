@@ -265,9 +265,11 @@ void LeggedController::setupMrt() {
 }
 
 void LeggedController::setupStateEstimate(const std::string& taskFile, bool verbose) {
-  stateEstimate_ = std::make_shared<KalmanFilterEstimate>(leggedInterface_->getPinocchioInterface(),
+  // stateEstimate_ = std::make_shared<KalmanFilterEstimate>(leggedInterface_->getPinocchioInterface(),
+  //                                                         leggedInterface_->getCentroidalModelInfo(), *eeKinematicsPtr_);
+  // dynamic_cast<KalmanFilterEstimate&>(*stateEstimate_).loadSettings(taskFile, verbose);
+  stateEstimate_ = std::make_shared<FromTopicStateEstimate>(leggedInterface_->getPinocchioInterface(),
                                                           leggedInterface_->getCentroidalModelInfo(), *eeKinematicsPtr_);
-  dynamic_cast<KalmanFilterEstimate&>(*stateEstimate_).loadSettings(taskFile, verbose);
   currentObservation_.time = 0;
 }
 

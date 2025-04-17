@@ -9,7 +9,7 @@ FromTopicStateEstimate::FromTopicStateEstimate(PinocchioInterface pinocchioInter
                                                const PinocchioEndEffectorKinematics& eeKinematics)
     : StateEstimateBase(std::move(pinocchioInterface), std::move(info), eeKinematics) {
   ros::NodeHandle nh;
-  sub_ = nh.subscribe<nav_msgs::Odometry>("/ground_truth/state", 10, &FromTopicStateEstimate::callback, this);
+  sub_ = nh.subscribe<nav_msgs::Odometry>("/lio_sam/odom_incremental", 10, &FromTopicStateEstimate::callback, this);
 }
 
 void FromTopicStateEstimate::callback(const nav_msgs::Odometry::ConstPtr& msg) {
