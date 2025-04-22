@@ -7,6 +7,13 @@
         </description>
     </class>
 
+     <class name="legged/LeggedControllerFromTopicEstimate" type="legged::LeggedControllerFromTopicEstimate"
+            base_class_type="controller_interface::ControllerBase">
+        <description>
+            Like LeggedController, but simply reads a state estimation from a topic.
+        </description>
+    </class>
+
     <class name="legged/LeggedCheaterController" type="legged::LeggedCheaterController"
            base_class_type="controller_interface::ControllerBase">
         <description>

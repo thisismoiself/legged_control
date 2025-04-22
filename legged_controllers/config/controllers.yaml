@@ -4,6 +4,8 @@ controllers:
     publish_rate: 100
   legged_controller:
     type: legged/LeggedController
+  legged_controller_from_topic_estimate:
+    type: legged/LeggedControllerFromTopicEstimate
   legged_cheater_controller:
     type: legged/LeggedCheaterController
   stand_up_controller:

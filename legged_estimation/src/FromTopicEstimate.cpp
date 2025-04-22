@@ -2,14 +2,15 @@
 // Created by qiayuan on 2022/7/24.
 //
 
-#include "legged_estimation/FromTopiceEstimate.h"
+#include "legged_estimation/FromTopicEstimate.h"
 
 namespace legged {
 FromTopicStateEstimate::FromTopicStateEstimate(PinocchioInterface pinocchioInterface, CentroidalModelInfo info,
                                                const PinocchioEndEffectorKinematics& eeKinematics)
     : StateEstimateBase(std::move(pinocchioInterface), std::move(info), eeKinematics) {
   ros::NodeHandle nh;
-  sub_ = nh.subscribe<nav_msgs::Odometry>("/lio_sam/odom_incremental", 10, &FromTopicStateEstimate::callback, this);
+  // sub_ = nh.subscribe<nav_msgs::Odometry>("/lio_sam/odom_incremental", 10, &FromTopicStateEstimate::callback, this);
+  sub_ = nh.subscribe<nav_msgs::Odometry>("/ground_truth/state", 10, &FromTopicStateEstimate::callback, this);
 }
 
 void FromTopicStateEstimate::callback(const nav_msgs::Odometry::ConstPtr& msg) {
