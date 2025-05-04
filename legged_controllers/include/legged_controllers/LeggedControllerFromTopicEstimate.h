@@ -31,16 +31,16 @@ namespace legged
   {
   public:
     LeggedControllerFromTopicEstimate() = default;
-    ~LeggedControllerFromTopicEstimate() override;
 
-    bool init(hardware_interface::RobotHW* robot_hw, ros::NodeHandle& controller_nh) override;
-    // void update(const ros::Time& time, const ros::Duration& period) override;
+    bool init(hardware_interface::RobotHW *robot_hw, ros::NodeHandle &controller_nh) override;
+    void update(const ros::Time &time, const ros::Duration &period) override;
     // void starting(const ros::Time& time) override;
     // void stopping(const ros::Time& /*time*/) override;
-  
-   protected:
-    virtual void updateStateEstimation(const ros::Time& time, const ros::Duration& period);
-    virtual void setupStateEstimate(const std::string& taskFile, bool verbose);
+    void publishMsgs(const ros::Time &time);
+
+  protected:
+  virtual void setupStateEstimate(const std::string& taskFile, bool verbose);
+
 
   private:
     std::thread mpcThread_;

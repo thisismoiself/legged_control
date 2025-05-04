@@ -1,37 +1,47 @@
 <library path="lib/liblegged_controllers">
 
     <class name="legged/LeggedController" type="legged::LeggedController"
-           base_class_type="controller_interface::ControllerBase">
+        base_class_type="controller_interface::ControllerBase">
         <description>
             The basic legged controller.
         </description>
     </class>
 
-     <class name="legged/LeggedControllerFromTopicEstimate" type="legged::LeggedControllerFromTopicEstimate"
-            base_class_type="controller_interface::ControllerBase">
+    <class name="legged/LeggedControllerFromTopicEstimate"
+        type="legged::LeggedControllerFromTopicEstimate"
+        base_class_type="controller_interface::ControllerBase">
         <description>
             Like LeggedController, but simply reads a state estimation from a topic.
         </description>
     </class>
 
     <class name="legged/LeggedCheaterController" type="legged::LeggedCheaterController"
-           base_class_type="controller_interface::ControllerBase">
+        base_class_type="controller_interface::ControllerBase">
         <description>
             The basic legged controller with cheat state estimator
         </description>
     </class>
 
     <class name="legged/StandUpController" type="legged::StandUpController"
-            base_class_type="controller_interface::ControllerBase">
+        base_class_type="controller_interface::ControllerBase">
         <description>
             Controller for making the Go2 stand up
         </description>
     </class>
 
     <class name="legged/LieDownController" type="legged::LieDownController"
-            base_class_type="controller_interface::ControllerBase">
+        base_class_type="controller_interface::ControllerBase">
         <description>
             Controller for making the Go2 lay down
         </description>
     </class>
+
+    <!-- <class name="imu_sensor_controller/ImuSensorController"
+        type="imu_sensor_controller::ImuSensorController"
+        base_class_type="controller_interface::ControllerBase">
+        <description>
+            This controller publishes the readings of all available IMU sensors as sensor_msgs/Imu
+            message. The controller expects a ImuSensorInterface type of hardware interface.
+        </description>
+    </class> -->
 </library>

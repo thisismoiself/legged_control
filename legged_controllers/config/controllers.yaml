@@ -2,6 +2,9 @@ controllers:
   joint_state_controller:
     type: joint_state_controller/JointStateController
     publish_rate: 100
+  # imu_sensor_controller:
+  #   type: imu_sensor_controller/ImuSensorController
+  #   publish_rate: 1000
   legged_controller:
     type: legged/LeggedController
   legged_controller_from_topic_estimate:

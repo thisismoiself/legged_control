@@ -34,262 +34,80 @@ namespace legged
     ROS_INFO_STREAM("Initializing LeggedControllerFromTopicEstimate ...");
     nh_ = controller_nh;
 
-    if (nh_.hasParam("/is_simulation"))
+    if (nh_.getParam("/is_simulation", isSimulation_) && isSimulation_)
     {
-      nh_.getParam("/is_simulation", isSimulation_);
-    }
-
-    if(isSimulation_)
-    {
-      ROS_INFO_STREAM("LeggedControllerFromTopicEstimate is running in simulation mode.");
-      ROS_INFO_STREAM("Creating imu publisher");
+      ROS_INFO_STREAM("LeggedControlerFromTopicEstimate is running in simulation, creating publishers.");
       imuPublisher_ = nh_.advertise<sensor_msgs::Imu>("/base_imu", 1);
-      ROS_INFO_STREAM("Creating joint state publisher");
-      jointStatePublisher_ = nh_.advertise<sensor_msgs::JointState>("/joint_states", 1);
+      // jointStatePublisher_ = nh_.advertise<sensor_msgs::JointState>("/joint_states", 1);
     }
     else
     {
-      ROS_INFO_STREAM("LeggedControllerFromTopicEstimate is running in real robot mode.");
+      ROS_INFO_STREAM("LeggedControlerFromTopicEstimate is running on real robot.");
     }
-
 
     return LeggedController::init(robot_hw, controller_nh);
-
-    // // Initialize OCS2
-    // std::string urdfFile;
-    // std::string taskFile;
-    // std::string referenceFile;
-    // controller_nh.getParam("/urdfFile", urdfFile);
-    // controller_nh.getParam("/taskFile", taskFile);
-    // controller_nh.getParam("/referenceFile", referenceFile);
-    // bool verbose = false;
-    // loadData::loadCppDataType(taskFile, "legged_robot_interface.verbose", verbose);
-
-    // setupLeggedInterface(taskFile, urdfFile, referenceFile, verbose);
-    // setupMpc();
-    // setupMrt();
-    // // Visualization
-    // ros::NodeHandle nh;
-    // CentroidalModelPinocchioMapping pinocchioMapping(leggedInterface_->getCentroidalModelInfo());
-    // eeKinematicsPtr_ = std::make_shared<PinocchioEndEffectorKinematics>(leggedInterface_->getPinocchioInterface(), pinocchioMapping,
-    //                                                                     leggedInterface_->modelSettings().contactNames3DoF);
-    // robotVisualizer_ = std::make_shared<LeggedRobotVisualizer>(leggedInterface_->getPinocchioInterface(),
-    //                                                            leggedInterface_->getCentroidalModelInfo(), *eeKinematicsPtr_, nh);
-    // selfCollisionVisualization_.reset(new LeggedSelfCollisionVisualization(leggedInterface_->getPinocchioInterface(),
-    //                                                                        leggedInterface_->getGeometryInterface(), pinocchioMapping, nh));
-
-    // // Hardware interface
-    // auto* hybridJointInterface = robot_hw->get<HybridJointInterface>();
-    // std::vector<std::string> joint_names{"LF_HAA", "LF_HFE", "LF_KFE", "LH_HAA", "LH_HFE", "LH_KFE",
-    //                                      "RF_HAA", "RF_HFE", "RF_KFE", "RH_HAA", "RH_HFE", "RH_KFE"};
-    // for (const auto& joint_name : joint_names) {
-    //   hybridJointHandles_.push_back(hybridJointInterface->getHandle(joint_name));
-    // }
-    // auto* contactInterface = robot_hw->get<ContactSensorInterface>();
-    // for (const auto& name : leggedInterface_->modelSettings().contactNames3DoF) {
-    //   contactHandles_.push_back(contactInterface->getHandle(name));
-    // }
-    // imuSensorHandle_ = robot_hw->get<hardware_interface::ImuSensorInterface>()->getHandle("base_imu");
-
-    // // State estimation
-    // setupStateEstimate(taskFile, verbose);
-
-    // // Whole body control
-    // wbc_ = std::make_shared<WeightedWbc>(leggedInterface_->getPinocchioInterface(), leggedInterface_->getCentroidalModelInfo(),
-    //                                      *eeKinematicsPtr_);
-    // wbc_->loadTasksSetting(taskFile, verbose);
-
-    // // Safety Checker
-    // safetyChecker_ = std::make_shared<SafetyChecker>(leggedInterface_->getCentroidalModelInfo());
-
-    // return true;
   }
 
-  // void LeggedControllerFromTopicEstimate::starting(const ros::Time& time) {
-
-  //   ROS_INFO_STREAM("Starting LeggedController ...");
-
-  //   // Initial state
-  //   currentObservation_.state.setZero(leggedInterface_->getCentroidalModelInfo().stateDim);
-  //   updateStateEstimation(time, ros::Duration(0.002));
-  //   currentObservation_.input.setZero(leggedInterface_->getCentroidalModelInfo().inputDim);
-  //   currentObservation_.mode = ModeNumber::STANCE;
-
-  //   TargetTrajectories target_trajectories({currentObservation_.time}, {currentObservation_.state}, {currentObservation_.input});
-
-  //   // Set the first observation and command and wait for optimization to finish
-  //   mpcMrtInterface_->setCurrentObservation(currentObservation_);
-  //   mpcMrtInterface_->getReferenceManager().setTargetTrajectories(target_trajectories);
-  //   ROS_INFO_STREAM("Waiting for the initial policy ...");
-  //   while (!mpcMrtInterface_->initialPolicyReceived() && ros::ok()) {
-  //     mpcMrtInterface_->advanceMpc();
-  //     ros::WallRate(leggedInterface_->mpcSettings().mrtDesiredFrequency_).sleep();
-  //   }
-  //   ROS_INFO_STREAM("Initial policy has been received.");
-
-  //   mpcRunning_ = true;
-  // }
-
-  // void LeggedControllerFromTopicEstimate::stopping(const ros::Time& time) {
-
-  //   mpcRunning_ = false;
-  //   ROS_INFO_STREAM("Stopping LeggedControllerFromTopicEstimate, setting motors to damping");
-  //   for(int j = 0; j < 12; j++)
-  //   {
-  //           hybridJointHandles_[j].setCommand(0, 0, 0, 2.0, 0);
-  //   }
-  // }
-
-  // void LeggedControllerFromTopicEstimate::update(const ros::Time& time, const ros::Duration& period) {
-  //   // State Estimate
-  //   updateStateEstimation(time, period);
-
-  //   // Update the current state of the system
-  //   mpcMrtInterface_->setCurrentObservation(currentObservation_);
-
-  //   // Load the latest MPC policy
-  //   mpcMrtInterface_->updatePolicy();
-
-  //   // Evaluate the current policy
-  //   vector_t optimizedState, optimizedInput;
-  //   size_t plannedMode = 0;  // The mode that is active at the time the policy is evaluated at.
-  //   mpcMrtInterface_->evaluatePolicy(currentObservation_.time, currentObservation_.state, optimizedState, optimizedInput, plannedMode);
-
-  //   // Whole body control
-  //   currentObservation_.input = optimizedInput;
-
-  //   wbcTimer_.startTimer();
-  //   vector_t x = wbc_->update(optimizedState, optimizedInput, measuredRbdState_, plannedMode, period.toSec());
-  //   wbcTimer_.endTimer();
-
-  //   vector_t torque = x.tail(12);
-
-  //   vector_t posDes = centroidal_model::getJointAngles(optimizedState, leggedInterface_->getCentroidalModelInfo());
-  //   vector_t velDes = centroidal_model::getJointVelocities(optimizedInput, leggedInterface_->getCentroidalModelInfo());
-
-  //   // Safety check, if failed, stop the controller
-  //   if (!safetyChecker_->check(currentObservation_, optimizedState, optimizedInput)) {
-  //     ROS_ERROR_STREAM("[Legged Controller] Safety check failed, stopping the controller.");
-  //     stopRequest(time);
-  //   }
-
-  //   for (size_t j = 0; j < leggedInterface_->getCentroidalModelInfo().actuatedDofNum; ++j) {
-  //     hybridJointHandles_[j].setCommand(posDes(j), velDes(j), 0, 3, torque(j));
-  //   }
-
-  //   // Visualization
-  //   robotVisualizer_->update(currentObservation_, mpcMrtInterface_->getPolicy(), mpcMrtInterface_->getCommand());
-  //   selfCollisionVisualization_->update(currentObservation_);
-
-  //   // Publish the observation. Only needed for the command interface
-  //   observationPublisher_.publish(ros_msg_conversions::createObservationMsg(currentObservation_));
-  // }
-
-  void LeggedControllerFromTopicEstimate::updateStateEstimation(const ros::Time& time, const ros::Duration& period) {
-
-    vector_t jointPos(hybridJointHandles_.size()), jointVel(hybridJointHandles_.size());
-    contact_flag_t contacts;
-    Eigen::Quaternion<scalar_t> quat;
-    contact_flag_t contactFlag;
-    vector3_t angularVel, linearAccel;
-    matrix3_t orientationCovariance, angularVelCovariance, linearAccelCovariance;
-
-    for (size_t i = 0; i < hybridJointHandles_.size(); ++i) {
-      jointPos(i) = hybridJointHandles_[i].getPosition();
-      jointVel(i) = hybridJointHandles_[i].getVelocity();
-    }
-    for (size_t i = 0; i < contacts.size(); ++i) {
-      contactFlag[i] = contactHandles_[i].isContact();
-    }
-    for (size_t i = 0; i < 4; ++i) {
-      quat.coeffs()(i) = imuSensorHandle_.getOrientation()[i];
-    }
-    for (size_t i = 0; i < 3; ++i) {
-      angularVel(i) = imuSensorHandle_.getAngularVelocity()[i];
-      linearAccel(i) = imuSensorHandle_.getLinearAcceleration()[i];
-    }
-    for (size_t i = 0; i < 9; ++i) {
-      orientationCovariance(i) = imuSensorHandle_.getOrientationCovariance()[i];
-      angularVelCovariance(i) = imuSensorHandle_.getAngularVelocityCovariance()[i];
-      linearAccelCovariance(i) = imuSensorHandle_.getLinearAccelerationCovariance()[i];
-    }
-
-    if(isSimulation_) {
-      // publish imu to /base_imu topic
-      sensor_msgs::Imu imu_msg;
-      imu_msg.header.stamp = time;
-      imu_msg.header.frame_id = "imu_link";
-      imu_msg.orientation.x = quat.x();
-      imu_msg.orientation.y = quat.y();
-      imu_msg.orientation.z = quat.z();
-      imu_msg.orientation.w = quat.w();
-      imu_msg.angular_velocity.x = angularVel(0);
-      imu_msg.angular_velocity.y = angularVel(1);
-      imu_msg.angular_velocity.z = angularVel(2);
-      imu_msg.linear_acceleration.x = linearAccel(0);
-      imu_msg.linear_acceleration.y = linearAccel(1);
-      imu_msg.linear_acceleration.z = linearAccel(2);
-      imu_msg.orientation_covariance[0] = orientationCovariance(0);
-      imu_msg.orientation_covariance[4] = orientationCovariance(4);
-      imu_msg.orientation_covariance[8] = orientationCovariance(8);
-      imu_msg.angular_velocity_covariance[0] = angularVelCovariance(0);
-      imu_msg.angular_velocity_covariance[4] = angularVelCovariance(4);
-      imu_msg.angular_velocity_covariance[8] = angularVelCovariance(8);
-      imu_msg.linear_acceleration_covariance[0] = linearAccelCovariance(0);
-      imu_msg.linear_acceleration_covariance[4] = linearAccelCovariance(4);
-      imu_msg.linear_acceleration_covariance[8] = linearAccelCovariance(8);
-      
-      sensor_msgs::JointState joint_state_msg;
-      joint_state_msg.header.stamp = time;
-      joint_state_msg.name.resize(hybridJointHandles_.size());
-      joint_state_msg.position.resize(hybridJointHandles_.size());
-      joint_state_msg.velocity.resize(hybridJointHandles_.size());
-      for (size_t i = 0; i < hybridJointHandles_.size(); ++i) {
-        joint_state_msg.name[i] = hybridJointHandles_[i].getName();
-        joint_state_msg.position[i] = jointPos(i);
-        joint_state_msg.velocity[i] = jointVel(i);
-
-      }
-
-      imuPublisher_.publish(imu_msg);
-      jointStatePublisher_.publish(joint_state_msg);
-    }
-
-    stateEstimate_->updateJointStates(jointPos, jointVel);
-    stateEstimate_->updateContact(contactFlag);
-    stateEstimate_->updateImu(quat, angularVel, linearAccel, orientationCovariance, angularVelCovariance, linearAccelCovariance);
-    measuredRbdState_ = stateEstimate_->update(time, period);
-    currentObservation_.time += period.toSec();
-    scalar_t yawLast = currentObservation_.state(9);
-    currentObservation_.state = rbdConversions_->computeCentroidalStateFromRbdModel(measuredRbdState_);
-    currentObservation_.state(9) = yawLast + angles::shortest_angular_distance(yawLast, currentObservation_.state(9));
-    currentObservation_.mode = stateEstimate_->getMode();
-  }
-
-  LeggedControllerFromTopicEstimate::~LeggedControllerFromTopicEstimate()
+  void LeggedControllerFromTopicEstimate::update(const ros::Time &time, const ros::Duration &period)
   {
-    controllerRunning_ = false;
-    if (mpcThread_.joinable())
+    LeggedController::update(time, period);
+
+    if (isSimulation_)
     {
-      mpcThread_.join();
+      publishMsgs(time);
     }
-    std::cerr << "########################################################################";
-    std::cerr << "\n### MPC Benchmarking";
-    std::cerr << "\n###   Maximum : " << mpcTimer_.getMaxIntervalInMilliseconds() << "[ms].";
-    std::cerr << "\n###   Average : " << mpcTimer_.getAverageInMilliseconds() << "[ms]." << std::endl;
-    std::cerr << "########################################################################";
-    std::cerr << "\n### WBC Benchmarking";
-    std::cerr << "\n###   Maximum : " << wbcTimer_.getMaxIntervalInMilliseconds() << "[ms].";
-    std::cerr << "\n###   Average : " << wbcTimer_.getAverageInMilliseconds() << "[ms].";
+  }
+
+  void LeggedControllerFromTopicEstimate::publishMsgs(const ros::Time &time)
+  {
+    /* --- IMU --- */
+    sensor_msgs::Imu imu_msg;
+    imu_msg.header.stamp = time;
+    imu_msg.header.frame_id = "imu_link";
+
+    imu_msg.angular_velocity.x = imuSensorHandle_.getAngularVelocity()[0];
+    imu_msg.angular_velocity.y = imuSensorHandle_.getAngularVelocity()[1];
+    imu_msg.angular_velocity.z = imuSensorHandle_.getAngularVelocity()[2];
+    imu_msg.linear_acceleration.x = imuSensorHandle_.getLinearAcceleration()[0];
+    imu_msg.linear_acceleration.y = imuSensorHandle_.getLinearAcceleration()[1];
+    imu_msg.linear_acceleration.z = imuSensorHandle_.getLinearAcceleration()[2];
+    imu_msg.orientation.x = imuSensorHandle_.getOrientation()[0];
+    imu_msg.orientation.y = imuSensorHandle_.getOrientation()[1];
+    imu_msg.orientation.z = imuSensorHandle_.getOrientation()[2];
+    imu_msg.orientation.w = imuSensorHandle_.getOrientation()[3];
+
+    for (size_t i = 0; i < 9; ++i)
+    {
+      imu_msg.angular_velocity_covariance[i] = imuSensorHandle_.getLinearAcceleration()[i];
+      imu_msg.linear_acceleration_covariance[i] = imuSensorHandle_.getLinearAccelerationCovariance()[i];
+      imu_msg.orientation_covariance[i] = imuSensorHandle_.getOrientationCovariance()[i];
+    }
+
+    imuPublisher_.publish(imu_msg);
+    
+    // /* --- Joint State --- */
+    // sensor_msgs::JointState joint_state_msg;
+    // joint_state_msg.header.stamp = time;
+    // joint_state_msg.header.frame_id = "base_link"; // TODO: check if this is correct
+
+    // joint_state_msg.name.resize(hybridJointHandles_.size());
+    // joint_state_msg.position.resize(hybridJointHandles_.size());
+    // joint_state_msg.velocity.resize(hybridJointHandles_.size());
+    // joint_state_msg.effort.resize(hybridJointHandles_.size());
+
+    // for (size_t i = 0; i < hybridJointHandles_.size(); ++i)
+    // {
+    //   joint_state_msg.name[i] = hybridJointHandles_[i].getName();
+    //   joint_state_msg.position[i] = hybridJointHandles_[i].getPosition();
+    //   joint_state_msg.velocity[i] = hybridJointHandles_[i].getVelocity();
+    //   joint_state_msg.effort[i] = hybridJointHandles_[i].getEffort();
+    // }
+
+    // // jointStatePublisher_.publish(joint_state_msg);
   }
 
   void LeggedControllerFromTopicEstimate::setupStateEstimate(const std::string &taskFile, bool verbose)
   {
-    ROS_INFO_STREAM("Setting up state estimation with FromTopicEstimate ...");
-
-    // stateEstimate_ = std::make_shared<KalmanFilterEstimate>(leggedInterface_->getPinocchioInterface(),
-    //                                                         leggedInterface_->getCentroidalModelInfo(), *eeKinematicsPtr_);
-    // dynamic_cast<KalmanFilterEstimate&>(*stateEstimate_).loadSettings(taskFile, verbose);
 
     stateEstimate_ = std::make_shared<FromTopicStateEstimate>(leggedInterface_->getPinocchioInterface(),
                                                               leggedInterface_->getCentroidalModelInfo(), *eeKinematicsPtr_);
