@@ -6,7 +6,7 @@
 
 namespace legged {
 FromTopicStateEstimate::FromTopicStateEstimate(PinocchioInterface pinocchioInterface, CentroidalModelInfo info,
-                                               const PinocchioEndEffectorKinematics& eeKinematics)
+                                               const PinocchioEndEffectorKinematics& eeKinematics, std::string topicName)
     : StateEstimateBase(std::move(pinocchioInterface), std::move(info), eeKinematics) {
   ros::NodeHandle nh;
   // sub_ = nh.subscribe<nav_msgs::Odometry>("/lio_sam/odom_incremental", 10, &FromTopicStateEstimate::callback, this);

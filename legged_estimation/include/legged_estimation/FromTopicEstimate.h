@@ -13,7 +13,7 @@ using namespace ocs2;
 class FromTopicStateEstimate : public StateEstimateBase {
  public:
   FromTopicStateEstimate(PinocchioInterface pinocchioInterface, CentroidalModelInfo info,
-                         const PinocchioEndEffectorKinematics& eeKinematics);
+                         const PinocchioEndEffectorKinematics& eeKinematics, std::string topicName = "/ground_truth/state");
 
   void updateImu(const Eigen::Quaternion<scalar_t>& quat, const vector3_t& angularVelLocal, const vector3_t& linearAccelLocal,
                  const matrix3_t& orientationCovariance, const matrix3_t& angularVelCovariance,

@@ -152,6 +152,7 @@ void LeggedController::update(const ros::Time& time, const ros::Duration& period
   robotVisualizer_->update(currentObservation_, mpcMrtInterface_->getPolicy(), mpcMrtInterface_->getCommand());
   selfCollisionVisualization_->update(currentObservation_);
 
+
   // Publish the observation. Only needed for the command interface
   observationPublisher_.publish(ros_msg_conversions::createObservationMsg(currentObservation_));
 }
@@ -265,17 +266,17 @@ void LeggedController::setupMrt() {
 }
 
 void LeggedController::setupStateEstimate(const std::string& taskFile, bool verbose) {
-  // stateEstimate_ = std::make_shared<KalmanFilterEstimate>(leggedInterface_->getPinocchioInterface(),
-  //                                                         leggedInterface_->getCentroidalModelInfo(), *eeKinematicsPtr_);
-  // dynamic_cast<KalmanFilterEstimate&>(*stateEstimate_).loadSettings(taskFile, verbose);
-  stateEstimate_ = std::make_shared<FromTopicStateEstimate>(leggedInterface_->getPinocchioInterface(),
+  stateEstimate_ = std::make_shared<KalmanFilterEstimate>(leggedInterface_->getPinocchioInterface(),
                                                           leggedInterface_->getCentroidalModelInfo(), *eeKinematicsPtr_);
+  dynamic_cast<KalmanFilterEstimate&>(*stateEstimate_).loadSettings(taskFile, verbose);
+  // stateEstimate_ = std::make_shared<FromTopicStateEstimate>(leggedInterface_->getPinocchioInterface(),
+  //                                                         leggedInterface_->getCentroidalModelInfo(), *eeKinematicsPtr_);
   currentObservation_.time = 0;
 }
 
 void LeggedCheaterController::setupStateEstimate(const std::string& /*taskFile*/, bool /*verbose*/) {
   stateEstimate_ = std::make_shared<FromTopicStateEstimate>(leggedInterface_->getPinocchioInterface(),
-                                                            leggedInterface_->getCentroidalModelInfo(), *eeKinematicsPtr_);
+                                                            leggedInterface_->getCentroidalModelInfo(), *eeKinematicsPtr_, "/ground_truth/state");
 }
 
 }  // namespace legged
