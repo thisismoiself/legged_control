@@ -78,7 +78,7 @@ namespace legged
 
     for (size_t i = 0; i < 9; ++i)
     {
-      imu_msg.angular_velocity_covariance[i] = imuSensorHandle_.getLinearAcceleration()[i];
+      imu_msg.angular_velocity_covariance[i] = imuSensorHandle_.getAngularVelocityCovariance()[i];
       imu_msg.linear_acceleration_covariance[i] = imuSensorHandle_.getLinearAccelerationCovariance()[i];
       imu_msg.orientation_covariance[i] = imuSensorHandle_.getOrientationCovariance()[i];
     }

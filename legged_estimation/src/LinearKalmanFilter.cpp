@@ -45,8 +45,8 @@ KalmanFilterEstimate::KalmanFilterEstimate(PinocchioInterface pinocchioInterface
   eeKinematics_->setPinocchioInterface(pinocchioInterface_);
 
   world2odom_.setRotation(tf2::Quaternion::getIdentity());
-  sub_ = ros::NodeHandle().subscribe<nav_msgs::Odometry>("/ground_truth/state", 10, &KalmanFilterEstimate::callback, this);
-  // sub_ = ros::NodeHandle().subscribe<nav_msgs::Odometry>("/tracking_camera/odom/sample", 10, &KalmanFilterEstimate::callback, this);
+  // sub_ = ros::NodeHandle().subscribe<nav_msgs::Odometry>("/ground_truth/state", 10, &KalmanFilterEstimate::callback, this);
+  sub_ = ros::NodeHandle().subscribe<nav_msgs::Odometry>("/lio_sam/odom_incremental", 10, &KalmanFilterEstimate::callback, this);
 }
 
 vector_t KalmanFilterEstimate::update(const ros::Time& time, const ros::Duration& period) {
